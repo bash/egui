@@ -304,12 +304,14 @@ pub struct NativeOptions {
     /// Does not work on Linux (see <https://github.com/rust-windowing/winit/issues/1549>).
     ///
     /// See also [`Self::default_theme`].
+    #[deprecated]
     pub follow_system_theme: bool,
 
     /// Which theme to use in case [`Self::follow_system_theme`] is `false`
     /// or eframe fails to detect the system theme.
     ///
     /// Default: [`egui::Theme::Dark`].
+    #[deprecated]
     pub default_theme: egui::Theme,
 
     /// This controls what happens when you close the main eframe window.
@@ -454,12 +456,14 @@ pub struct WebOptions {
     /// See also [`Self::default_theme`].
     ///
     /// Default: `true`.
+    #[deprecated]
     pub follow_system_theme: bool,
 
     /// Which theme to use in case [`Self::follow_system_theme`] is `false`
     /// or system theme detection fails.
     ///
     /// Default: `egui::Theme::Dark`.
+    #[deprecated]
     pub default_theme: egui::Theme,
 
     /// Sets the number of bits in the depth buffer.
@@ -788,11 +792,6 @@ pub struct IntegrationInfo {
     /// Information about the surrounding web environment.
     #[cfg(target_arch = "wasm32")]
     pub web_info: WebInfo,
-
-    /// Does the OS use dark or light mode?
-    ///
-    /// `None` means "don't know".
-    pub system_theme: Option<egui::Theme>,
 
     /// Seconds of cpu usage (in seconds) on the previous frame.
     ///

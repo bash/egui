@@ -362,8 +362,7 @@ pub(crate) fn install_color_scheme_change_event(runner_ref: &WebRunner) -> Resul
             "change",
             |event, runner| {
                 let theme = theme_from_dark_mode(event.matches());
-                runner.frame.info.system_theme = Some(theme);
-                runner.egui_ctx().set_visuals(theme.egui_visuals());
+                runner.input.raw.system_theme = Some(theme);
                 runner.needs_repaint.repaint_asap();
             },
         )?;
