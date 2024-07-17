@@ -1436,8 +1436,6 @@ impl Style {
             always_scroll_the_only_direction,
         } = self;
 
-        visuals.light_dark_radio_buttons(ui);
-
         crate::Grid::new("_options").show(ui, |ui| {
             ui.label("Override font id");
             ui.vertical(|ui| {

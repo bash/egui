@@ -313,7 +313,7 @@ impl Options {
         let Self {
             dark_style, // covered above
             light_style,
-            theme_preference: _,
+            theme_preference,
             fallback_theme: _,
             zoom_factor: _, // TODO(emilk)
             zoom_with_keyboard,
@@ -352,10 +352,12 @@ impl Options {
         CollapsingHeader::new("🎑 Style")
             .default_open(true)
             .show(ui, |ui| {
-                CollapsingHeader::new("🌙 Dark")
+                theme_preference.radio_buttons(ui);
+
+                CollapsingHeader::new("🌙 Dark Style")
                     .default_open(ui.ctx().theme() == Theme::Dark)
                     .show(ui, |ui| std::sync::Arc::make_mut(dark_style).ui(ui));
-                CollapsingHeader::new("☀ Light")
+                CollapsingHeader::new("☀ Light Style")
                     .default_open(ui.ctx().theme() == Theme::Light)
                     .show(ui, |ui| std::sync::Arc::make_mut(light_style).ui(ui));
             });
