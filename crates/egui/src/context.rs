@@ -473,7 +473,9 @@ impl ContextImpl {
             });
 
             viewport.hits = if let Some(pos) = viewport.input.pointer.interact_pos() {
-                let interact_radius = self.memory.options.style.interaction.interact_radius;
+                let interact_radius = style(&self.memory.options, viewport.input.system_theme)
+                    .interaction
+                    .interact_radius;
 
                 crate::hit_test::hit_test(
                     &viewport.prev_frame.widgets,
@@ -533,6 +535,7 @@ impl ContextImpl {
         let input = &self.viewport().input;
         let pixels_per_point = input.pixels_per_point();
         let max_texture_side = input.max_texture_side;
+        let system_theme = input.system_theme;
 
         if let Some(font_definitions) = self.memory.new_font_definitions.take() {
             // New font definition loaded, so we need to reload all fonts.
@@ -569,7 +572,10 @@ impl ContextImpl {
             crate::profile_scope!("preload_font_glyphs");
             // Preload the most common characters for the most common fonts.
             // This is not very important to do, but may save a few GPU operations.
-            for font_id in self.memory.options.style.text_styles.values() {
+            for font_id in style(&self.memory.options, system_theme)
+                .text_styles
+                .values()
+            {
                 fonts.lock().fonts.font(font_id).preload_common_characters();
             }
         }
@@ -625,6 +631,39 @@ impl ContextImpl {
 
     fn viewport_for(&mut self, viewport_id: ViewportId) -> &mut ViewportState {
         self.viewports.entry(viewport_id).or_default()
+    }
+
+    fn theme(&self) -> Theme {
+        theme(
+            &self.memory.options,
+            self.viewports
+                .get(&self.viewport_id())
+                .and_then(|v| v.input.system_theme),
+        )
+    }
+
+    fn style(&self) -> &Arc<Style> {
+        style(
+            &self.memory.options,
+            self.viewports
+                .get(&self.viewport_id())
+                .and_then(|v| v.input.system_theme),
+        )
+    }
+}
+
+fn theme(options: &Options, system_theme: Option<Theme>) -> Theme {
+    match options.theme_preference {
+        ThemePreference::Dark => Theme::Dark,
+        ThemePreference::Light => Theme::Light,
+        ThemePreference::System => system_theme.unwrap_or(options.fallback_theme),
+    }
+}
+
+fn style(options: &Options, system_theme: Option<Theme>) -> &Arc<Style> {
+    match theme(options, system_theme) {
+        Theme::Dark => &options.dark_style,
+        Theme::Light => &options.light_style,
     }
 }
 
@@ -1231,7 +1270,7 @@ impl Context {
     pub fn register_widget_info(&self, id: Id, make_info: impl Fn() -> crate::WidgetInfo) {
         #[cfg(debug_assertions)]
         self.write(|ctx| {
-            if ctx.memory.options.style.debug.show_interactive_widgets {
+            if ctx.style().debug.show_interactive_widgets {
                 ctx.viewport().this_frame.widgets.set_info(id, make_info());
             }
         });
@@ -1601,11 +1640,7 @@ impl Context {
     /// The [`Theme`] used to select the appropriate [`Style`] (dark or light)
     /// used by all subsequent windows, panels etc.
     pub fn theme(&self) -> Theme {
-        self.options(|opt| match opt.theme_preference {
-            ThemePreference::Dark => Theme::Dark,
-            ThemePreference::Light => Theme::Light,
-            ThemePreference::System => opt.fallback_theme,
-        })
+        self.read(|ctx| ctx.theme())
     }
 
     /// The [`Theme`] used to select the appropriate [`Style`] (dark or light)
@@ -1616,7 +1651,7 @@ impl Context {
 
     /// The [`Style`] used by all subsequent windows, panels etc.
     pub fn style(&self) -> Arc<Style> {
-        self.options(|opt| opt.style.clone())
+        self.read(|ctx| ctx.style().clone())
     }
 
     /// Mutate the [`Style`] used by all subsequent windows, panels etc.
@@ -1629,7 +1664,8 @@ impl Context {
     /// });
     /// ```
     pub fn style_mut(&self, mutate_style: impl FnOnce(&mut Style)) {
-        self.options_mut(|opt| mutate_style(std::sync::Arc::make_mut(&mut opt.style)));
+        todo!()
+        // self.options_mut(|opt| mutate_style(std::sync::Arc::make_mut(&mut opt.style)));
     }
 
     /// The [`Style`] used by all new windows, panels etc.
@@ -1638,7 +1674,8 @@ impl Context {
     ///
     /// You can use [`Ui::style_mut`] to change the style of a single [`Ui`].
     pub fn set_style(&self, style: impl Into<Arc<Style>>) {
-        self.options_mut(|opt| opt.style = style.into());
+        todo!()
+        // self.options_mut(|opt| opt.style = style.into());
     }
 
     /// The [`Visuals`] used by all subsequent windows, panels etc.
@@ -1651,7 +1688,8 @@ impl Context {
     /// ctx.set_visuals(egui::Visuals::light()); // Switch to light mode
     /// ```
     pub fn set_visuals(&self, visuals: crate::Visuals) {
-        self.options_mut(|opt| std::sync::Arc::make_mut(&mut opt.style).visuals = visuals);
+        todo!()
+        // self.options_mut(|opt| std::sync::Arc::make_mut(&mut opt.style).visuals = visuals);
     }
 
     /// The number of physical pixels for each logical point.
@@ -2472,7 +2510,7 @@ impl Context {
     /// Whether or not to debug widget layout on hover.
     #[cfg(debug_assertions)]
     pub fn debug_on_hover(&self) -> bool {
-        self.options(|opt| opt.style.debug.debug_on_hover)
+        self.style().debug.debug_on_hover
     }
 
     /// Turn on/off whether or not to debug widget layout on hover.

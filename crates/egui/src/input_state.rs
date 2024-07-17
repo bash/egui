@@ -1,7 +1,7 @@
 mod touch_state;
 
 use crate::data::input::*;
-use crate::{emath::*, util::History};
+use crate::{emath::*, util::History, Theme};
 use std::{
     collections::{BTreeMap, HashSet},
     time::Duration,
@@ -160,6 +160,12 @@ pub struct InputState {
 
     /// In-order events received this frame
     pub events: Vec<Event>,
+
+    // ----------------------------------------------
+    /// Does the OS use dark or light mode?
+    ///
+    /// `None` means "don't know".
+    pub(crate) system_theme: Option<Theme>,
 }
 
 impl Default for InputState {
@@ -187,6 +193,8 @@ impl Default for InputState {
             modifiers: Default::default(),
             keys_down: Default::default(),
             events: Default::default(),
+
+            system_theme: Default::default(),
         }
     }
 }
@@ -359,6 +367,9 @@ impl InputState {
             modifiers: new.modifiers,
             keys_down,
             events: new.events.clone(), // TODO(emilk): remove clone() and use raw.events
+
+            system_theme: new.system_theme,
+
             raw: new,
         }
     }
@@ -1268,6 +1279,8 @@ impl InputState {
             modifiers,
             keys_down,
             events,
+
+            system_theme,
         } = self;
 
         ui.style_mut()
@@ -1325,6 +1338,7 @@ impl InputState {
         ui.label(format!("focused:   {focused}"));
         ui.label(format!("modifiers: {modifiers:#?}"));
         ui.label(format!("keys_down: {keys_down:?}"));
+        ui.label(format!("system_theme: {system_theme:?}"));
         ui.scope(|ui| {
             ui.set_min_height(150.0);
             ui.label(format!("events: {events:#?}"))

@@ -1133,6 +1133,15 @@ impl Default for Style {
     }
 }
 
+impl Style {
+    pub(crate) fn light() -> Self {
+        Self {
+            visuals: Visuals::light(),
+            ..Default::default()
+        }
+    }
+}
+
 impl Default for Spacing {
     fn default() -> Self {
         Self {

@@ -168,9 +168,13 @@ impl FocusDirection {
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Options {
-    /// The default style for new [`Ui`](crate::Ui):s.
+    /// The default style for new [`Ui`](crate::Ui):s in dark mode.
     #[cfg_attr(feature = "serde", serde(skip))]
-    pub(crate) style: std::sync::Arc<Style>,
+    pub(crate) dark_style: std::sync::Arc<Style>,
+
+    /// The default style for new [`Ui`](crate::Ui):s in light mode.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) light_style: std::sync::Arc<Style>,
 
     /// Control the theme selection.
     ///
@@ -274,7 +278,8 @@ impl Default for Options {
         };
 
         Self {
-            style: Default::default(),
+            dark_style: Default::default(),
+            light_style: std::sync::Arc::new(Style::light()),
             theme_preference: ThemePreference::System,
             fallback_theme: Theme::Dark,
             zoom_factor: 1.0,
@@ -297,7 +302,8 @@ impl Options {
     /// Show the options in the ui.
     pub fn ui(&mut self, ui: &mut crate::Ui) {
         let Self {
-            style, // covered above
+            dark_style, // covered above
+            light_style,
             theme_preference: _,
             fallback_theme: _,
             zoom_factor: _, // TODO(emilk)
@@ -337,7 +343,12 @@ impl Options {
         CollapsingHeader::new("🎑 Style")
             .default_open(true)
             .show(ui, |ui| {
-                std::sync::Arc::make_mut(style).ui(ui);
+                CollapsingHeader::new("🌙 Dark")
+                    .default_open(ui.ctx().theme() == Theme::Dark)
+                    .show(ui, |ui| std::sync::Arc::make_mut(dark_style).ui(ui));
+                CollapsingHeader::new("☀ Light")
+                    .default_open(ui.ctx().theme() == Theme::Light)
+                    .show(ui, |ui| std::sync::Arc::make_mut(light_style).ui(ui));
             });
 
         CollapsingHeader::new("✒ Painting")
