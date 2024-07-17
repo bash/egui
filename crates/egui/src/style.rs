@@ -1822,6 +1822,7 @@ impl WidgetVisuals {
 
 impl Visuals {
     /// Show radio-buttons to switch between light and dark mode.
+    #[deprecated]
     pub fn light_dark_radio_buttons(&mut self, ui: &mut crate::Ui) {
         ui.horizontal(|ui| {
             ui.selectable_value(self, Self::light(), "☀ Light");
@@ -1831,6 +1832,7 @@ impl Visuals {
 
     /// Show small toggle-button for light and dark mode.
     #[must_use]
+    #[deprecated]
     pub fn light_dark_small_toggle_button(&self, ui: &mut crate::Ui) -> Option<Self> {
         #![allow(clippy::collapsible_else_if)]
         if self.dark_mode {

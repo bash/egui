@@ -172,6 +172,16 @@ pub struct Options {
     #[cfg_attr(feature = "serde", serde(skip))]
     pub(crate) style: std::sync::Arc<Style>,
 
+    /// Control the theme selection.
+    ///
+    /// Default is [`ThemePreference::System`].
+    pub theme_preference: ThemePreference,
+
+    /// The theme used in case the system theme can't be determined.
+    ///
+    /// Default is [`Theme::Dark`].
+    pub fallback_theme: Theme,
+
     /// Global zoom factor of the UI.
     ///
     /// This is used to calculate the `pixels_per_point`
@@ -265,6 +275,8 @@ impl Default for Options {
 
         Self {
             style: Default::default(),
+            theme_preference: ThemePreference::System,
+            fallback_theme: Theme::Dark,
             zoom_factor: 1.0,
             zoom_with_keyboard: true,
             tessellation_options: Default::default(),
@@ -285,7 +297,9 @@ impl Options {
     /// Show the options in the ui.
     pub fn ui(&mut self, ui: &mut crate::Ui) {
         let Self {
-            style,          // covered above
+            style, // covered above
+            theme_preference: _,
+            fallback_theme: _,
             zoom_factor: _, // TODO(emilk)
             zoom_with_keyboard,
             tessellation_options,

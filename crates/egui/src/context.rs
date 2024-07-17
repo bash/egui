@@ -1598,6 +1598,22 @@ impl Context {
         }
     }
 
+    /// The [`Theme`] used to select the appropriate [`Style`] (dark or light)
+    /// used by all subsequent windows, panels etc.
+    pub fn theme(&self) -> Theme {
+        self.options(|opt| match opt.theme_preference {
+            ThemePreference::Dark => Theme::Dark,
+            ThemePreference::Light => Theme::Light,
+            ThemePreference::System => opt.fallback_theme,
+        })
+    }
+
+    /// The [`Theme`] used to select the appropriate [`Style`] (dark or light)
+    /// used by all subsequent windows, panels etc.
+    pub fn set_theme(&self, theme_preference: impl Into<ThemePreference>) {
+        self.options_mut(|opt| opt.theme_preference = theme_preference.into())
+    }
+
     /// The [`Style`] used by all subsequent windows, panels etc.
     pub fn style(&self) -> Arc<Style> {
         self.options(|opt| opt.style.clone())
