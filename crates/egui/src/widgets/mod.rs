@@ -137,7 +137,11 @@ pub fn global_dark_light_mode_switch(ui: &mut Ui) {
     let style: crate::Style = (*ui.ctx().style()).clone();
     let new_visuals = style.visuals.light_dark_small_toggle_button(ui);
     if let Some(visuals) = new_visuals {
-        ui.ctx().set_visuals(visuals);
+        if visuals.dark_mode {
+            ui.ctx().set_theme(Theme::Dark)
+        } else {
+            ui.ctx().set_theme(Theme::Light)
+        }
     }
 }
 
@@ -145,5 +149,9 @@ pub fn global_dark_light_mode_switch(ui: &mut Ui) {
 pub fn global_dark_light_mode_buttons(ui: &mut Ui) {
     let mut visuals = ui.ctx().style().visuals.clone();
     visuals.light_dark_radio_buttons(ui);
-    ui.ctx().set_visuals(visuals);
+    if visuals.dark_mode {
+        ui.ctx().set_theme(Theme::Dark)
+    } else {
+        ui.ctx().set_theme(Theme::Light)
+    }
 }
