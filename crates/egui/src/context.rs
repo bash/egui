@@ -661,10 +661,7 @@ fn theme(options: &Options, system_theme: Option<Theme>) -> Theme {
 }
 
 fn style(options: &Options, system_theme: Option<Theme>) -> &Arc<Style> {
-    match theme(options, system_theme) {
-        Theme::Dark => &options.dark_style,
-        Theme::Light => &options.light_style,
-    }
+    options.style(theme(options, system_theme))
 }
 
 // ----------------------------------------------------------------------------
@@ -1645,16 +1642,31 @@ impl Context {
 
     /// The [`Theme`] used to select the appropriate [`Style`] (dark or light)
     /// used by all subsequent windows, panels etc.
+    ///
+    /// Example:
+    /// ```
+    /// # let mut ctx = egui::Context::default();
+    /// ctx.set_theme(egui::Theme::Light); // Force light mode
+    /// ```
     pub fn set_theme(&self, theme_preference: impl Into<ThemePreference>) {
         self.options_mut(|opt| opt.theme_preference = theme_preference.into())
     }
 
+    /// The [`Theme`] preference from the OS.
+    /// This is used when the theme preference is set to [`ThemePreference::System`].
+    pub fn system_theme(&self) -> Option<Theme> {
+        self.input(|input| input.system_theme)
+    }
+
     /// The [`Style`] used by all subsequent windows, panels etc.
+    ///
+    /// This takes into account which theme is currently active
+    /// and returns either the dark or light style.
     pub fn style(&self) -> Arc<Style> {
         self.read(|ctx| ctx.style().clone())
     }
 
-    /// Mutate the [`Style`] used by all subsequent windows, panels etc.
+    /// Mutate both the dark and light [`Style`] used by all subsequent windows, panels etc.
     ///
     /// Example:
     /// ```
@@ -1663,33 +1675,95 @@ impl Context {
     ///     style.spacing.item_spacing = egui::vec2(10.0, 20.0);
     /// });
     /// ```
-    pub fn style_mut(&self, mutate_style: impl FnOnce(&mut Style)) {
-        todo!()
-        // self.options_mut(|opt| mutate_style(std::sync::Arc::make_mut(&mut opt.style)));
+    pub fn style_mut(&self, mut mutate_style: impl FnMut(&mut Style)) {
+        self.dark_style_mut(&mut mutate_style);
+        self.light_style_mut(mutate_style);
     }
 
-    /// The [`Style`] used by all new windows, panels etc.
+    /// The [`Style`] used by all subsequent windows, panels etc. in dark mode.
+    ///
+    /// This takes into account which theme is currently active
+    /// and returns either the dark or light style.
+    pub fn dark_style(&self) -> Arc<Style> {
+        self.options(|opt| opt.dark_style.clone())
+    }
+
+    /// Mutate the [`Style`] used by all subsequent windows, panels etc. in dark mode.
+    ///
+    /// Example:
+    /// ```
+    /// # let mut ctx = egui::Context::default();
+    /// ctx.dark_style_mut(|style| {
+    ///     style.spacing.item_spacing = egui::vec2(10.0, 20.0);
+    /// });
+    /// ```
+    pub fn dark_style_mut(&self, mutate_style: impl FnOnce(&mut Style)) {
+        self.options_mut(|opt| mutate_style(std::sync::Arc::make_mut(&mut opt.dark_style)));
+    }
+
+    /// The [`Style`] used by all new windows, panels etc in dark mode.
     ///
     /// You can also change this using [`Self::style_mut`]
     ///
     /// You can use [`Ui::style_mut`] to change the style of a single [`Ui`].
-    pub fn set_style(&self, style: impl Into<Arc<Style>>) {
-        todo!()
-        // self.options_mut(|opt| opt.style = style.into());
+    pub fn set_dark_style(&self, style: impl Into<Arc<Style>>) {
+        self.options_mut(|opt| opt.dark_style = style.into());
     }
 
-    /// The [`Visuals`] used by all subsequent windows, panels etc.
+    /// The [`Style`] used by all subsequent windows, panels etc. in light mode.
+    ///
+    /// This takes into account which theme is currently active
+    /// and returns either the dark or light style.
+    pub fn light_style(&self) -> Arc<Style> {
+        self.options(|opt| opt.light_style.clone())
+    }
+
+    /// Mutate the [`Style`] used by all subsequent windows, panels etc in dark mode.
+    ///
+    /// Example:
+    /// ```
+    /// # let mut ctx = egui::Context::default();
+    /// ctx.light_style_mut(|style| {
+    ///     style.spacing.item_spacing = egui::vec2(10.0, 20.0);
+    /// });
+    /// ```
+    pub fn light_style_mut(&self, mutate_style: impl FnOnce(&mut Style)) {
+        self.options_mut(|opt| mutate_style(std::sync::Arc::make_mut(&mut opt.dark_style)));
+    }
+
+    /// The [`Style`] used by all new windows, panels etc in light mode.
+    ///
+    /// You can also change this using [`Self::style_mut`]
+    ///
+    /// You can use [`Ui::style_mut`] to change the style of a single [`Ui`].
+    pub fn set_light_style(&self, style: impl Into<Arc<Style>>) {
+        self.options_mut(|opt| opt.dark_style = style.into());
+    }
+
+    /// The [`Visuals`] used by all subsequent windows, panels etc in dark mode.
     ///
     /// You can also use [`Ui::visuals_mut`] to change the visuals of a single [`Ui`].
     ///
     /// Example:
     /// ```
     /// # let mut ctx = egui::Context::default();
-    /// ctx.set_visuals(egui::Visuals::light()); // Switch to light mode
+    /// ctx.set_dark_visuals(egui::Visuals::light()); // Switch to light mode
     /// ```
-    pub fn set_visuals(&self, visuals: crate::Visuals) {
-        todo!()
-        // self.options_mut(|opt| std::sync::Arc::make_mut(&mut opt.style).visuals = visuals);
+    pub fn set_dark_visuals(&self, visuals: crate::Visuals) {
+        self.dark_style_mut(|style| style.visuals = visuals);
+    }
+
+    /// The [`Visuals`] used by all subsequent windows, panels etc in light mode.
+    ///
+    /// You can also use [`Ui::visuals_mut`] to change the visuals of a single [`Ui`].
+    ///
+    /// Example:
+    /// ```
+    /// # let mut ctx = egui::Context::default();
+    /// ctx.set_light_visuals(egui::Visuals::light()); // Switch to light mode
+    /// ```
+    pub fn set_light_visuals(&self, visuals: crate::Visuals) {
+        self.light_style_mut(|style| style.visuals = visuals);
     }
 
     /// The number of physical pixels for each logical point.
@@ -2900,11 +2974,18 @@ impl Context {
 }
 
 impl Context {
-    /// Edit the active [`Style`].
-    pub fn style_ui(&self, ui: &mut Ui) {
-        let mut style: Style = (*self.style()).clone();
+    /// Edit the dark [`Style`].
+    pub fn dark_style_ui(&self, ui: &mut Ui) {
+        let mut style: Style = (*self.dark_style()).clone();
         style.ui(ui);
-        self.set_style(style);
+        self.set_dark_style(style);
+    }
+
+    /// Edit the light [`Style`].
+    pub fn light_style_ui(&self, ui: &mut Ui) {
+        let mut style: Style = (*self.light_style()).clone();
+        style.ui(ui);
+        self.set_light_style(style);
     }
 }
 

@@ -132,7 +132,8 @@ impl ScrollAppearance {
 
         ui.add_space(8.0);
 
-        ui.ctx().set_style(style.clone());
+        ui.ctx()
+            .style_mut(|s| s.spacing.scroll = style.spacing.scroll);
         ui.set_style(style);
 
         ui.separator();

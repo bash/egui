@@ -299,6 +299,15 @@ impl Default for Options {
 }
 
 impl Options {
+    pub(crate) fn style(&self, theme: Theme) -> &std::sync::Arc<Style> {
+        match theme {
+            Theme::Dark => &self.dark_style,
+            Theme::Light => &self.light_style,
+        }
+    }
+}
+
+impl Options {
     /// Show the options in the ui.
     pub fn ui(&mut self, ui: &mut crate::Ui) {
         let Self {
